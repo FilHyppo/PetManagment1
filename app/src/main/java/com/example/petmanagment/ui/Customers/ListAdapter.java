@@ -6,10 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.petmanagment.R;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -59,7 +61,12 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                 reference.child(path).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        holder.imcustomer_icon.setImageURI(uri);
+                        String url = uri.toString();
+                        System.out.println(url);
+                        Glide
+                                .with(holder.imcustomer_icon)
+                                .load(uri)
+                                .into(holder.imcustomer_icon);
                     }
                 });
 
