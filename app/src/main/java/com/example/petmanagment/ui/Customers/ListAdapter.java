@@ -61,12 +61,14 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                 reference.child(path).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        String url = uri.toString();
-                        System.out.println(url);
-                        Glide
-                                .with(holder.imcustomer_icon)
-                                .load(uri)
-                                .into(holder.imcustomer_icon);
+                        if(uri != null) {
+                            String url = uri.toString();
+                            System.out.println(url);
+                            Glide
+                                    .with(holder.imcustomer_icon)
+                                    .load(uri)
+                                    .into(holder.imcustomer_icon);
+                        }
                     }
                 });
 

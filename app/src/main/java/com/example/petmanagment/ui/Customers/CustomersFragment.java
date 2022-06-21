@@ -179,6 +179,7 @@ public class CustomersFragment extends Fragment {
                     customers.set(eventualPosition, String.format("%s\t%s", c.getName(), c.getLastName()));
                     break;
             }
+
             getCustomers(customers);
             dialog.dismiss();
 
@@ -308,7 +309,8 @@ public class CustomersFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
         //if(requestCode == 1)
         image_uri = data.getData();
-        image.setImageURI(image_uri);
+        if(data != null)
+            image.setImageURI(image_uri);
     }
 
     }
