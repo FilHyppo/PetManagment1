@@ -1,7 +1,10 @@
 package com.example.petmanagment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.Menu;
 import android.widget.ImageView;
@@ -141,6 +144,20 @@ public class HomeActivity extends AppCompatActivity {
                 .setReorderingAllowed(true)
                 .addToBackStack("name") // name can be null
                 .commit();
+    }
+
+
+    boolean isNetworkAvaiable(){
+            try {
+                ConnectivityManager manager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo nwInfo = null;
+                if (manager != null) {
+                    nwInfo = manager.getActiveNetworkInfo();
+                }
+                return nwInfo != null && nwInfo.isConnected();
+            }catch (NullPointerException e){
+                return false;
+            }
     }
 
 }

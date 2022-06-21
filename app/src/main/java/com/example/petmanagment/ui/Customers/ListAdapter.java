@@ -22,6 +22,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
     FirebaseUser user;
     FirebaseFirestore db;
     ArrayList<String> list;
+    Customer customer;
 
     public ListAdapter(ArrayList<String> list) {
         this.list = list;
@@ -38,7 +39,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
         holder.tvNameSurname.setText(list.get(position));
         user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
-        Customer customer=new Customer();
+        customer=new Customer();
         db.collection(user.getEmail().toString()).document(list.get(position)).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
