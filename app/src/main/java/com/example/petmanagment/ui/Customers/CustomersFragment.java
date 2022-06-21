@@ -289,7 +289,8 @@ public class CustomersFragment extends Fragment {
 
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
         super.onActivityResult(requestCode, resultCode, data);
-        image.setImageURI(data.getData());
+        if(requestCode == 1)
+             image.setImageURI(data.getData());
     }
 
     }
