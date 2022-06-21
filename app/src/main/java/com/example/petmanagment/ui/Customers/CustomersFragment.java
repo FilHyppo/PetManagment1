@@ -85,6 +85,7 @@ public class CustomersFragment extends Fragment {
         binding = FragmentCustomersBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         dataref = FirebaseDatabase.getInstance().getReference();
+        storage=FirebaseStorage.getInstance();
         reference = storage.getReference();
         EditText searchCustomer = (EditText) root.findViewById(R.id.search_customer_editText);
         recyclerView = root.findViewById(R.id.recyclerView);
@@ -237,7 +238,7 @@ public class CustomersFragment extends Fragment {
         @Override
         public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
             new RecyclerViewSwipeDecorator.Builder(getContext(), c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-                    .setIconHorizontalMargin(16, 2)
+                    .setIconHorizontalMargin(16, 1)
                     .addSwipeLeftBackgroundColor(ContextCompat.getColor(getContext(), R.color.red))
                     .addSwipeLeftActionIcon(R.drawable.delete_icon)
                     .addSwipeRightBackgroundColor(ContextCompat.getColor(getContext(), R.color.light_blue))
@@ -258,7 +259,7 @@ public class CustomersFragment extends Fragment {
     public void addNewCustomer(Customer customer) {
         user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
-        StorageReference photoRef = reference.child("images");
+        StorageReference photoRef = reference.child(String.format("%s/customer_icon",customer.getName()+customer.getLastName()));
         UploadTask uploadTask = photoRef.putFile(image_uri);
         uploadTask.addOnSuccessListener(taskSnapshot -> {
             System.out.println("foto caricata");

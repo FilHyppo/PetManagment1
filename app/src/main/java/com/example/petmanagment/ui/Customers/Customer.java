@@ -4,6 +4,8 @@ import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+
 public class Customer {
     private String name, lastName, phone, email;
     private ImageView profileIcon;
@@ -54,6 +56,7 @@ public class Customer {
         this.email = email;
     }
 
+    @NonNull
     public String toString(){
         return this.name+this.lastName+this.email+this.phone;
     }
