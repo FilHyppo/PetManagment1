@@ -157,7 +157,7 @@ public class CustomersFragment extends Fragment {
 
 
         confirm.setOnClickListener(view -> {
-            Customer c = new Customer(firstname.getText().toString(), lastname.getText().toString(), mobile.getText().toString(), email.getText().toString());
+            Customer c = new Customer(firstname.getText().toString(), lastname.getText().toString(), mobile.getText().toString(), email.getText().toString(), image);
             switch (operation){
                 case "add":
                     addNewCustomer(c);
