@@ -3,6 +3,7 @@ package com.example.petmanagment.ui.Customers;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Canvas;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
@@ -29,7 +30,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.petmanagment.R;
 import com.example.petmanagment.databinding.FragmentCustomersBinding;
+import com.google.android.gms.auth.api.signin.internal.Storage;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -39,10 +42,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import io.grpc.Context;
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator;
 
 
@@ -57,6 +64,9 @@ public class CustomersFragment extends Fragment {
     private EditText email;
     private ImageView image;
     private Button confirm;
+    StorageReference reference;
+    FirebaseStorage storage;
+    Uri image_uri;
     ArrayList<String> customers = new ArrayList<>();
     ArrayList<String> flag = new ArrayList<>();
     RecyclerView recyclerView;
@@ -75,7 +85,7 @@ public class CustomersFragment extends Fragment {
         binding = FragmentCustomersBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         dataref = FirebaseDatabase.getInstance().getReference();
-
+        reference = storage.getReference();
         EditText searchCustomer = (EditText) root.findViewById(R.id.search_customer_editText);
         recyclerView = root.findViewById(R.id.recyclerView);
         final ImageButton add_customer = root.findViewById(R.id.button2);
@@ -248,6 +258,12 @@ public class CustomersFragment extends Fragment {
     public void addNewCustomer(Customer customer) {
         user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
+        StorageReference photoRef = reference.child("images");
+        UploadTask uploadTask = photoRef.putFile(image_uri);
+        uploadTask.addOnSuccessListener(taskSnapshot -> {
+            System.out.println("foto caricata");
+
+        });
         ArrayList<Customer> current_customer = new ArrayList<>();
         current_customer.add(customer);
         db.collection(user.getEmail().toString()).document(customer.getName().toString() + '\t' + customer.getLastName().toString()).set(customer, SetOptions.merge()).addOnCompleteListener(task -> {
@@ -289,8 +305,9 @@ public class CustomersFragment extends Fragment {
 
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == 1)
-             image.setImageURI(data.getData());
+        //if(requestCode == 1)
+        image_uri = data.getData();
+        image.setImageURI(image_uri);
     }
 
     }
