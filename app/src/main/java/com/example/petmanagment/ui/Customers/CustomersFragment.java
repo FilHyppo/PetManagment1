@@ -1,9 +1,12 @@
 package com.example.petmanagment.ui.Customers;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.Canvas;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -11,10 +14,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Gallery;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -24,7 +30,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.petmanagment.R;
 import com.example.petmanagment.databinding.FragmentCustomersBinding;
+import com.google.android.gms.auth.api.signin.internal.Storage;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,23 +42,31 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import io.grpc.Context;
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator;
 
 
 public class CustomersFragment extends Fragment {
 
-
+    final private int GALLERY_REQ_CODE = 1000;
     private FragmentCustomersBinding binding;
     private AlertDialog dialog;
     private EditText firstname;
     private EditText lastname;
     private EditText mobile;
     private EditText email;
+    private ImageView image;
     private Button confirm;
+    StorageReference reference;
+    FirebaseStorage storage;
+    Uri image_uri;
     ArrayList<String> customers = new ArrayList<>();
     ArrayList<String> flag = new ArrayList<>();
     RecyclerView recyclerView;
@@ -69,7 +85,8 @@ public class CustomersFragment extends Fragment {
         binding = FragmentCustomersBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         dataref = FirebaseDatabase.getInstance().getReference();
-
+        storage=FirebaseStorage.getInstance();
+        reference = storage.getReference();
         EditText searchCustomer = (EditText) root.findViewById(R.id.search_customer_editText);
         recyclerView = root.findViewById(R.id.recyclerView);
         final ImageButton add_customer = root.findViewById(R.id.button2);
@@ -131,15 +148,27 @@ public class CustomersFragment extends Fragment {
         lastname = (EditText) popup.findViewById(R.id.lastname);
         mobile = (EditText) popup.findViewById(R.id.phone);
         email = (EditText) popup.findViewById(R.id.email);
-
+        image = (ImageView) popup.findViewById(R.id.newlisticon);
         confirm = (Button) popup.findViewById(R.id.cbutton);
 
         dialogBuilder.setView(popup);
         dialog = dialogBuilder.create();
         dialog.show();
 
+        image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent gallery = new Intent(Intent.ACTION_PICK);
+                gallery.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(gallery, GALLERY_REQ_CODE);
+
+            }
+        });
+
+
+
         confirm.setOnClickListener(view -> {
-            Customer c = new Customer(firstname.getText().toString(), lastname.getText().toString(), mobile.getText().toString(), email.getText().toString());
+            Customer c = new Customer(firstname.getText().toString(), lastname.getText().toString(), mobile.getText().toString(), email.getText().toString(), image);
             switch (operation){
                 case "add":
                     addNewCustomer(c);
@@ -150,6 +179,7 @@ public class CustomersFragment extends Fragment {
                     customers.set(eventualPosition, String.format("%s\t%s", c.getName(), c.getLastName()));
                     break;
             }
+
             getCustomers(customers);
             dialog.dismiss();
 
@@ -209,7 +239,7 @@ public class CustomersFragment extends Fragment {
         @Override
         public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
             new RecyclerViewSwipeDecorator.Builder(getContext(), c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-                    .setIconHorizontalMargin(16, 2)
+                    .setIconHorizontalMargin(16, 1)
                     .addSwipeLeftBackgroundColor(ContextCompat.getColor(getContext(), R.color.red))
                     .addSwipeLeftActionIcon(R.drawable.delete_icon)
                     .addSwipeRightBackgroundColor(ContextCompat.getColor(getContext(), R.color.light_blue))
@@ -230,6 +260,12 @@ public class CustomersFragment extends Fragment {
     public void addNewCustomer(Customer customer) {
         user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
+        StorageReference photoRef = reference.child(String.format("%s/customer_icon",customer.getName()+customer.getLastName()));
+        UploadTask uploadTask = photoRef.putFile(image_uri);
+        uploadTask.addOnSuccessListener(taskSnapshot -> {
+            System.out.println("foto caricata");
+
+        });
         ArrayList<Customer> current_customer = new ArrayList<>();
         current_customer.add(customer);
         db.collection(user.getEmail().toString()).document(customer.getName().toString() + '\t' + customer.getLastName().toString()).set(customer, SetOptions.merge()).addOnCompleteListener(task -> {
@@ -248,6 +284,7 @@ public class CustomersFragment extends Fragment {
                         if (!c.contains(document.getId()))
                             c.add(document.getId());
                         listAdapter.notifyDataSetChanged();
+                        System.out.println(db.collection(user.getEmail().toString()).document(document.getId()).get());
                     }
                 });
     }
@@ -266,5 +303,16 @@ public class CustomersFragment extends Fragment {
                 Toast.makeText(getContext(), "Something went wrong", Toast.LENGTH_LONG).show();
             }
         });
+        }
+
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        //if(requestCode == 1)
+        image_uri = data.getData();
+        if(data != null)
+            image.setImageURI(image_uri);
     }
-}
+
+    }
+
+
